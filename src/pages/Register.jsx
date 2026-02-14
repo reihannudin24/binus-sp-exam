@@ -1,8 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
     const navigate = useNavigate();
+    const { register } = useAuth();
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setError('');
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+        const result = await register(name, email, password);
+        if (result.success) {
+            navigate('/');
+        } else {
+            setError(result.message);
+        }
+    };
 
     return (
         <div className="bg-white flex justify-center ">
@@ -11,11 +33,14 @@ const Register = () => {
                     <h2 className="text-2xl text-left font-bold text-gray-900 mt-4 mb-6">Register</h2>
 
                     <div className="space-y-5">
+                        {error && <div className="text-red-500 text-xs text-center">{error}</div>}
                         <div>
                             <label className="block text-left text-gray-400 text-xs mb-2">Email</label>
                             <input
                                 type="email"
                                 placeholder="Masukan alamat email anda"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-6 py-3.5 rounded-3xl border border-gray-100 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent placeholder-gray-300 text-xs"
                             />
                         </div>
@@ -24,6 +49,8 @@ const Register = () => {
                             <input
                                 type="text"
                                 placeholder="Buat username anda"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
                                 className="w-full px-6 py-3.5 rounded-3xl  border border-gray-100 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent placeholder-gray-300 text-xs"
                             />
                         </div>
@@ -33,11 +60,15 @@ const Register = () => {
                                 <input
                                     type="password"
                                     placeholder="Masukan password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     className="w-full px-6 py-3.5 rounded-3xl  border border-gray-100 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent placeholder-gray-300 text-xs"
                                 />
                                 <input
                                     type="password"
                                     placeholder="Konfirmasi password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
                                     className="w-full px-6 py-3.5 rounded-3xl  border border-gray-100 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent placeholder-gray-300 text-xs"
                                 />
                             </div>
@@ -46,7 +77,7 @@ const Register = () => {
 
                     <div className="mt-12 space-y-3">
                         <button
-                            onClick={() => navigate('/home')}
+                            onClick={handleRegister}
                             className="w-full cursor-pointer py-3.5 rounded-full bg-yellow-400 text-white font-bold text-sm hover:bg-yellow-500 transition transform active:scale-95"
                         >
                             Sign-up
@@ -63,10 +94,8 @@ const Register = () => {
                     </div>
                 </div>
             </div>
-
         </div>
     );
 };
 
 export default Register;
-

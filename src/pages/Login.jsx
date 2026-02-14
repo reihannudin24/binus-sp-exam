@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        const result = await login(email, password);
+        if (result.success) {
+            navigate('/home');
+        } else {
+            setError(result.message);
+        }
+    };
 
     return (
         <div className="bg-white flex justify-center">
@@ -12,11 +28,14 @@ const Login = () => {
                     <h2 className="text-2xl text-left font-bold text-gray-900 mt-4 mb-6">Login</h2>
 
                     <div className="space-y-5">
+                        {error && <div className="text-red-500 text-xs text-center">{error}</div>}
                         <div>
                             <label className="block text-left text-gray-400 text-xs mb-2">Email</label>
                             <input
                                 type="email"
                                 placeholder="Masukan alamat email anda"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-6 py-3.5 rounded-3xl border border-gray-100 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent placeholder-gray-300 text-xs"
                             />
                         </div>
@@ -25,6 +44,8 @@ const Login = () => {
                             <input
                                 type="password"
                                 placeholder="Masukan password anda"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-6 py-3.5 rounded-3xl border border-gray-100 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent placeholder-gray-300 text-xs"
                             />
                         </div>
@@ -39,7 +60,7 @@ const Login = () => {
 
                     <div className="mt-8 space-y-3">
                         <button
-                            onClick={() => navigate('/home')}
+                            onClick={handleLogin}
                             className="w-full cursor-pointer py-3.5 rounded-full bg-yellow-400 text-white font-bold text-sm hover:bg-yellow-500 transition transform active:scale-95"
                         >
                             Login
