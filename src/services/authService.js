@@ -4,9 +4,9 @@ const authService = {
     login: async (email, password) => {
         const response = await api.post('/auth/login', { email, password });
         if (response.data.success) {
-            localStorage.setItem('token', response.data.token);
-            // Store user info if available, or fetch it
-            // For now, we'll just store the token and return the data
+            const { token, user } = response.data.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
         }
         return response.data;
     },

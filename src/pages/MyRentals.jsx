@@ -54,7 +54,7 @@ const MyRentals = () => {
                     ) : rentals.length > 0 ? (
                         <div className="space-y-4">
                             {rentals.map((rental, index) => (
-                                <div key={rental.id || index} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition">
+                                <div key={rental._id || index} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition">
                                     <div className={`w-20 h-28 shrink-0 ${getRandomColor(index)} rounded-lg shadow-sm flex items-center justify-center p-2 text-center text-white overflow-hidden`}>
                                         <span className="text-[9px] font-bold font-serif line-clamp-3">
                                             {rental.book?.title || rental.title || 'Book Title'}

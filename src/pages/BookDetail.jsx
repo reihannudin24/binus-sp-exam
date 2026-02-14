@@ -2,46 +2,85 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft, FaEllipsisV, FaStar, FaHeadphones, FaRegClock, FaBookOpen, FaBoxOpen, FaLayerGroup } from 'react-icons/fa';
 import bookService from '../services/bookService';
+import { useAuth } from '../context/AuthContext';
 
 const BookDetail = () => {
     const navigate = useNavigate();
     const { slug } = useParams();
+    const { user } = useAuth();
     const [book, setBook] = useState(null);
     const [loading, setLoading] = useState(true);
     const [renting, setRenting] = useState(false);
+    const [isRented, setIsRented] = useState(false);
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        const fetchBook = async () => {
+        const fetchData = async () => {
             try {
-                const response = await bookService.getBookBySlug(slug);
-                setBook(response.data);
+                // Fetch book details
+                const bookRes = await bookService.getBookBySlug(slug);
+                const bookData = bookRes.data;
+                setBook(bookData);
+
+                // Check dependencies if book loaded
+                if (bookData) {
+                    try {
+                        const rentalsRes = await bookService.getMyRentals();
+                        const rentals = rentalsRes.data || [];
+                        // Check if current book is in rentals (robust ID check)
+                        const hasRented = rentals.some(r => {
+                            const rentalBookId = r.book_id || r.book?._id || r._id;
+                            return String(rentalBookId) === String(bookData._id);
+                        });
+                        setIsRented(hasRented);
+                    } catch (err) {
+                        console.log("Could not fetch rentals (maybe not logged in)", err);
+                    }
+                }
             } catch (err) {
-                console.error("Failed to fetch book", err);
+                console.error("Failed to fetch data", err);
                 setMessage('Failed to load book details');
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchBook();
+        fetchData();
     }, [slug]);
 
     const handleRent = async () => {
         if (!book) return;
+
+        if (isRented) {
+            // Navigate to read page
+            navigate(`/book/${slug}/read`);
+            return;
+        }
+
         setRenting(true);
         setMessage('');
         try {
-            const response = await bookService.rentBook(book.id);
-            if (response.success) {
+            const response = await bookService.rentBook(book._id);
+            if (response.success || response.message === 'Book rented successfully') {
                 setMessage('Book rented successfully!');
-                setTimeout(() => navigate('/my-rentals'), 1500);
+                setIsRented(true);
             } else {
                 setMessage(response.message || 'Failed to rent book');
             }
         } catch (err) {
             console.error("Rent error", err);
-            setMessage(err.response?.data?.message || 'Failed to rent book');
+            const errorMsg = err.response?.data?.message || 'Failed to rent book';
+
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                setMessage("Please login to rent books.");
+                setTimeout(() => navigate('/'), 1500);
+            } else if (errorMsg.toLowerCase().includes('already rented')) {
+                // If backend says already rented, update state to reflect that
+                setMessage("You have already rented this book.");
+                setIsRented(true);
+            } else {
+                setMessage(errorMsg);
+            }
         } finally {
             setRenting(false);
         }
@@ -75,7 +114,7 @@ const BookDetail = () => {
 
                 <div className="relative z-10 flex flex-col items-center mt-4 mb-8">
                     <div className="relative w-40 h-60 shadow-2xl rounded-lg overflow-hidden transform transition hover:scale-105 duration-300">
-                        <div className={`w-full h-full ${getRandomColor(book.id)} flex flex-col items-center justify-center text-center p-4 border-r-4 border-black/20`}>
+                        <div className={`w-full h-full ${getRandomColor(book._id)} flex flex-col items-center justify-center text-center p-4 border-r-4 border-black/20`}>
                             <h1 className="text-white text-xl font-serif font-bold leading-tight opacity-90 line-clamp-4">
                                 {book.title}
                             </h1>
@@ -149,13 +188,15 @@ const BookDetail = () => {
                         )}
                         <button
                             onClick={handleRent}
-                            disabled={renting || book.stock <= 0}
-                            className={`w-full cursor-pointer py-3.5 rounded-full font-bold text-sm shadow-md transition transform active:scale-95 ${book.stock > 0
+                            disabled={renting || (book.stock <= 0 && !isRented)}
+                            className={`w-full cursor-pointer py-3.5 rounded-full font-bold text-sm shadow-md transition transform active:scale-95 ${isRented
+                                ? 'bg-green-500 text-white hover:bg-green-600 hover:shadow-lg'
+                                : book.stock > 0
                                     ? 'bg-yellow-400 text-white hover:bg-yellow-500 hover:shadow-lg'
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 }`}
                         >
-                            {renting ? 'Processing...' : book.stock > 0 ? 'Rent Now' : 'Out of Stock'}
+                            {renting ? 'Processing...' : isRented ? 'Open the Book' : book.stock > 0 ? 'Rent Now' : 'Out of Stock'}
                         </button>
                     </div>
                 </div>

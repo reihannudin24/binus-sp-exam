@@ -11,8 +11,12 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) {
-            setUser({ token }); // Simplistic user object for now
+        const userData = localStorage.getItem('user');
+        if (token && userData) {
+            setUser({ ...JSON.parse(userData), token });
+        } else if (token) {
+            // Fallback if only token exists
+            setUser({ token });
         }
         setLoading(false);
     }, []);
@@ -21,7 +25,8 @@ export const AuthProvider = ({ children }) => {
         try {
             const data = await authService.login(email, password);
             if (data.success) {
-                setUser({ token: data.token });
+                const { token, user } = data.data;
+                setUser({ ...user, token });
                 return { success: true };
             } else {
                 return { success: false, message: 'Login failed' };
@@ -44,6 +49,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         authService.logout();
+        localStorage.removeItem('user');
         setUser(null);
     };
 

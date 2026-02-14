@@ -51,7 +51,7 @@ const AdminBooks = () => {
 
     const openEditModal = (book) => {
         setIsEditing(true);
-        setCurrentBookId(book.id);
+        setCurrentBookId(book._id);
         setFormData({
             title: book.title,
             author: book.author,
@@ -119,7 +119,7 @@ const AdminBooks = () => {
                     ) : (
                         <div className="space-y-4 pb-20">
                             {books.map(book => (
-                                <div key={book.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition">
+                                <div key={book._id} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition">
                                     <div className="w-16 h-20 bg-gray-200 rounded-lg shrink-0 flex items-center justify-center">
                                         <span className="text-xs text-center p-1 font-bold text-gray-500">{book.category}</span>
                                     </div>
@@ -136,7 +136,7 @@ const AdminBooks = () => {
                                             <FaEdit size={14} />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(book.id)}
+                                            onClick={() => handleDelete(book._id)}
                                             className="p-2 text-red-500 hover:bg-red-50 rounded-full transition"
                                         >
                                             <FaTrash size={14} />
